@@ -1,6 +1,7 @@
 include ../make/service.mk
 
 PORT:=8001
+SERVICE:=users
 
 .PHONY: help
 

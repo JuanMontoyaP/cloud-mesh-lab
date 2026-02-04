@@ -46,5 +46,5 @@ db: ## Run local DB for development
 	docker-compose -f ../docker-compose.db.yml up -d
 
 clean: ## Clean all containers
-	docker-compose down -v
+	docker-compose down -v --remove-orphans
 	docker-compose -f ../docker-compose.db.yml down -v
