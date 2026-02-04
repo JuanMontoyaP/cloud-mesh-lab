@@ -1,0 +1,22 @@
+include:
+  - ../docker-compose.db.yml
+
+services:
+  users:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:80"
+    environment:
+      - DATABASE_URL=mysql+asyncmy://users_user:users_password@db:3306/users_db
+      - DATABASE_URL_READ=mysql+asyncmy://users_user:users_password@db:3306/users_db
+      - ENVIRONMENT=development
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src  # Hot reload for development
+    command: uvicorn src.main:app --host 0.0.0.0 --port 80 --reload
+    networks:
+      - app-network

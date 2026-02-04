@@ -1,15 +1,7 @@
 # ----------------------------
 # Builder stage
 # ----------------------------
-FROM python:3.14-slim AS builder
-
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    default-libmysqlclient-dev \
-    build-essential \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.14-slim-trixie AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
