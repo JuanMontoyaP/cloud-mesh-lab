@@ -17,7 +17,7 @@ sync: ## Sync Dependencies on the environment
 lock: ## Lock dependencies
 	uv lock
 
-dev: sync lock ## Run the service in local
+dev: sync lock db ## Run the service in local
 	uv run uvicorn src.main:app --reload --host 0.0.0.0 --port $(PORT)
 
 build: ## Build Docker image
@@ -30,3 +30,9 @@ build: ## Build Docker image
 
 run: build ## Run Docker container in local
 	docker run --rm -p $(PORT):80 $(IMAGE_NAME):$(IMAGE_TAG)
+
+db: ## Run local DB for development
+	docker-compose -f ../docker-compose.db.yml up -d
+
+clean: ## Clean all containers
+	docker-compose -f ../docker-compose.db.yml down -v

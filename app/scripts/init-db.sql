@@ -1,15 +1,13 @@
--- scripts/init-db.sql
--- Initial database setup
+-- Users Service DB
+CREATE DATABASE IF NOT EXISTS users_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Create database if not exists (handled by Docker, but good for manual setup)
-CREATE DATABASE IF NOT EXISTS appdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'users_user'@'%' IDENTIFIED BY 'users_password';
+GRANT ALL PRIVILEGES ON users_db.* TO 'users_user'@'%';
 
--- Grant privileges
-GRANT ALL PRIVILEGES ON appdb.* TO 'appuser'@'%';
+-- Tasks Service DB
+CREATE DATABASE IF NOT EXISTS tasks_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE USER 'tasks_user'@'%' IDENTIFIED BY 'tasks_password';
+GRANT ALL PRIVILEGES on tasks_db.* TO 'tasks_user'@'%';
+
 FLUSH PRIVILEGES;
-
--- Use the database
-USE appdb;
-
--- Any initial seed data can go here
--- INSERT INTO users (email, username, hashed_password) VALUES ...

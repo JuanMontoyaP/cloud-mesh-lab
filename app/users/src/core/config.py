@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "mysql+asyncmy://appuser:apppassword@localhost:3306/appdb"
+    DATABASE_URL: str = ""
     DATABASE_URL_READ: Optional[str] = None
 
     # Pool settings
