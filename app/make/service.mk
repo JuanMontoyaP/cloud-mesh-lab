@@ -29,7 +29,7 @@ build: ## Build Docker image
 	.
 
 run: build ## Run Docker container in local
-	docker run --rm -p $(PORT):80 $(IMAGE_NAME):$(IMAGE_TAG)
+	docker run --env-file .env --rm -p $(PORT):80 $(IMAGE_NAME):$(IMAGE_TAG)
 
 db: ## Run local DB for development
 	docker-compose -f ../docker-compose.db.yml up -d
