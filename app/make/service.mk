@@ -37,7 +37,11 @@ run: sync lock ## Run development containers
 	docker-compose up -d --build && uv run alembic upgrade head
 
 logs: ## See app logs
-	docker-compose logs -f $(SERVICE)
+	@if docker-compose ps -q $(SERVICE) 2>/dev/null | grep -q .; then \
+		docker-compose logs -f $(SERVICE); \
+	else \
+		docker-compose -f ../docker-compose.all.yml logs -f $(SERVICE); \
+	fi
 
 shell: ## Run shell on container development
 	docker-compose exec $(SERVICE) /bin/bash

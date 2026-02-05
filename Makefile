@@ -1,7 +1,7 @@
 .DEFAULT_GOAL:=help
 SERVICE?=all
 
-.PHONY: help build run clean
+.PHONY: help build run clean logs
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} \
@@ -17,3 +17,6 @@ run: ## Run service SERVICE=gateway|users|tasks|frontend|all
 
 clean: ## Run service SERVICE=gateway|users|tasks|frontend|all
 	@$(MAKE) -C app clean SERVICE=$(SERVICE)
+
+logs:
+	@$(MAKE) -C app logs SERVICE=$(SERVICE)
