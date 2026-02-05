@@ -16,4 +16,4 @@ run: ## Run service SERVICE=gateway|users|tasks|frontend|all
 	@$(MAKE) -C app run SERVICE=$(SERVICE)
 
 clean: ## Run service SERVICE=gateway|users|tasks|frontend|all
-	@$(MAKE) -C app run SERVICE=$(SERVICE)
+	@$(MAKE) -C app clean SERVICE=$(SERVICE)
