@@ -1,21 +1,21 @@
 .DEFAULT_GOAL:=help
 
-SERVICES:=gateway users orders frontend
+SERVICES:=gateway users tasks frontend
 SERVICE:=all
 
 .PHONY: dev build run help
 
 help: ## Show help
 	@echo "Usage:"
-	@echo "  make dev   	SERVICE=gateway|users|orders|frontend|all"
-	@echo "  make build   	SERVICE=gateway|users|orders|frontend|all"
-	@echo "  make run   	SERVICE=gateway|users|orders|frontend|all"
+	@echo "  make dev   	SERVICE=gateway|users|tasks|frontend|all"
+	@echo "  make build   	SERVICE=gateway|users|tasks|frontend|all"
+	@echo "  make run   	SERVICE=gateway|users|tasks|frontend|all"
 
 validate-service:
 	@if [ "$(SERVICE)" != "all" ] && \
 		[ "$(SERVICE)" != "gateway" ] && \
 		[ "$(SERVICE)" != "users" ] && \
-		[ "$(SERVICE)" != "orders" ] && \
+		[ "$(SERVICE)" != "tasks" ] && \
 		[ "$(SERVICE)" != "frontend" ]; then \
 		echo "Invalid SERVICE: $(SERVICE)"; \
 		exit 1; \
