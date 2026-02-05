@@ -30,13 +30,13 @@ build: sync lock ## Build Docker image
 	-t $(IMAGE_NAME):$(IMAGE_TAG) \
 	.
 
-migrations:
+migrations: ## Run migrations
 	uv run alembic upgrade head
 
 run: sync lock ## Run development containers
-	docker-compose up -d && uv run alembic upgrade head
+	docker-compose up -d --build && uv run alembic upgrade head
 
-logs: run ## See app logs
+logs: ## See app logs
 	docker-compose logs -f $(SERVICE)
 
 shell: ## Run shell on container development
