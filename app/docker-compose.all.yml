@@ -1,0 +1,4 @@
+include:
+  - docker-compose.db.yml
+  - ./users/docker-compose.yml
+  - ./tasks/docker-compose.yml

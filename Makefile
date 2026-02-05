@@ -1,7 +1,7 @@
 .DEFAULT_GOAL:=help
 SERVICE?=all
 
-.PHONY: help dev
+.PHONY: help build run clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} \
@@ -13,4 +13,7 @@ build: ## Build Docker images SERVICE=gateway|users|tasks|frontend|all
 	@$(MAKE) -C app build SERVICE=$(SERVICE)
 
 run: ## Run service SERVICE=gateway|users|tasks|frontend|all
+	@$(MAKE) -C app run SERVICE=$(SERVICE)
+
+clean: ## Run service SERVICE=gateway|users|tasks|frontend|all
 	@$(MAKE) -C app run SERVICE=$(SERVICE)

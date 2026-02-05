@@ -30,7 +30,7 @@ build: sync lock ## Build Docker image
 	-t $(IMAGE_NAME):$(IMAGE_TAG) \
 	.
 
-migrations:
+migrations: ## Run migrations
 	uv run alembic upgrade head
 
 run: sync lock ## Run development containers
