@@ -6,7 +6,7 @@ PARALLELISM:=$(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 
 
 BUILD_TARGETS:=$(addprefix build-,$(SERVICES))
 
-.PHONY: dev build run clean help validate-service build-%
+.PHONY: dev build run clean help validate-service logs build-%
 
 help: ## Show help
 	@echo "Usage:"
@@ -42,13 +42,17 @@ build-%:
 
 run: validate-service
 	@if [ "$(SERVICE)" == "all" ]; then \
-		docker-compose -f docker-compose.all.yml up -d --build; \
+		docker-compose -f docker-compose.all.yml build --parallel; \
+		docker-compose -f docker-compose.all.yml up -d; \
 		for service in $(SERVICES); do \
 			$(MAKE) -C $$service migrations; \
 		done; \
 	else \
 		$(MAKE) -C $(SERVICE) $@ SERVICE=$(SERVICE); \
 	fi
+
+logs:
+	@$(MAKE) -C $(SERVICE) $@ SERVICE=$(SERVICE)
 
 clean: validate-service
 	@if [ "$(SERVICE)" == "all" ]; then \
