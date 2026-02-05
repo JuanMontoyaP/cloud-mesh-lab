@@ -4,7 +4,7 @@ from typing import Annotated, List
 from fastapi import APIRouter, HTTPException, status, Depends, Path, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.schemas.tasks import TaskCreate, TaskResponse
+from src.schemas.tasks import TaskCreate, TaskResponse, TaskUpdate
 from src.core.dependencies import get_db
 from src.services.task_repository import TaskRepository
 
@@ -89,3 +89,55 @@ async def get_tasks_per_user(
         )
 
     return [TaskResponse.model_validate(task) for task in response]
+
+
+@router.put(
+    "/{task_id}",
+    status_code=status.HTTP_200_OK,
+    description="Update a task",
+    response_description="Tasks updated successfully",
+    response_model=TaskResponse,
+)
+async def update_task(
+    task_id: Annotated[int, Path(title="The task ID to update", gt=0)],
+    task_update: TaskUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> TaskResponse:
+    if not task_update.model_dump(exclude_unset=True):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No data to update"
+        )
+
+    repo = TaskRepository(db)
+    task = await repo.get_task_by_id(task_id)
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task does not exist"
+        )
+
+    response = await repo.update_task(task_id, task_update)
+
+    if not response:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
+
+    return TaskResponse.model_validate(response)
+
+
+@router.delete(
+    "/{task_id}",
+    status_code=status.HTTP_200_OK,
+    description="Delete Task by ID",
+    response_description="Task deleted successfully",
+)
+async def delete_task(
+    task_id: Annotated[int, Path(title="The ID of the task to delete", gt=0)],
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    repo = TaskRepository(db)
+
+    if not await repo.delete_task(task_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )

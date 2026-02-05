@@ -83,13 +83,13 @@ async def get_user(
 
 @router.put(
     "/{user_id}",
-    status_code=200,
+    status_code=status.HTTP_200_OK,
     description="Update and user",
     response_description="User updated successfully",
     response_model=UserResponse,
 )
 async def update_user(
-    user_id: Annotated[int, Path(title="The ID of the user to update")],
+    user_id: Annotated[int, Path(title="The ID of the user to update", gt=0)],
     user_data: UserUpdate,
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
@@ -131,12 +131,12 @@ async def update_user(
 
 @router.delete(
     "/{user_id}",
-    status_code=200,
+    status_code=status.HTTP_200_OK,
     description="Delete user with user ID",
     response_description="User deleted successfully",
 )
 async def delete_user(
-    user_id: Annotated[int, Path(title="The ID of the user to delete")],
+    user_id: Annotated[int, Path(title="The ID of the user to delete", gt=0)],
     db: AsyncSession = Depends(get_db),
 ) -> None:
     repo = UserRepository(db)

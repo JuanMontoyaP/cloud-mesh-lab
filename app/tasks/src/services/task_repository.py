@@ -1,10 +1,10 @@
 from typing import Optional, Sequence
 
-from sqlalchemy import select, update, delete, func
+from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import Task
-from src.schemas.tasks import TaskCreate
+from src.schemas.tasks import TaskCreate, TaskUpdate
 
 
 class TaskRepository:
@@ -33,3 +33,21 @@ class TaskRepository:
 
         tasks = result.scalars().all()
         return tasks if tasks else None
+
+    async def update_task(
+        self, task_id: int, task_update: TaskUpdate
+    ) -> Optional[Task]:
+        update_data = task_update.model_dump(exclude_unset=True)
+
+        if not update_data:
+            return await self.get_task_by_id(task_id)
+
+        await self.session.execute(
+            update(Task).where(Task.id == task_id).values(**update_data)
+        )
+        await self.session.flush()
+        return await self.get_task_by_id(task_id)
+
+    async def delete_task(self, task_id: int) -> bool:
+        result = await self.session.execute(delete(Task).where(Task.id == task_id))
+        return result.rowcount > 0  # type: ignore[attr-defined]
