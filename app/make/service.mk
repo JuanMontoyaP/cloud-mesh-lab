@@ -34,7 +34,7 @@ migrations:
 	uv run alembic upgrade head
 
 run: sync lock ## Run development containers
-	docker-compose up -d && uv run alembic upgrade head
+	docker-compose up -d --build && uv run alembic upgrade head
 
 logs: ## See app logs
 	docker-compose logs -f $(SERVICE)

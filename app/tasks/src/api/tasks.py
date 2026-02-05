@@ -1,9 +1,14 @@
-from fastapi import APIRouter, status, Depends
+import logging
+from typing import Annotated, List
+
+from fastapi import APIRouter, HTTPException, status, Depends, Path, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.schemas.tasks import TaskCreate, TaskResponse
 from src.core.dependencies import get_db
 from src.services.task_repository import TaskRepository
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
@@ -15,7 +20,7 @@ router = APIRouter(prefix="/tasks", tags=["Tasks"])
     response_description="Task created successfully",
     response_model=TaskResponse,
 )
-async def create_user(
+async def create_task(
     task: TaskCreate, db: AsyncSession = Depends(get_db)
 ) -> TaskResponse:
     repo = TaskRepository(db)
@@ -23,3 +28,64 @@ async def create_user(
     response = await repo.create_task(task)
 
     return TaskResponse.model_validate(response)
+
+
+@router.get(
+    "/{task_id}",
+    status_code=status.HTTP_200_OK,
+    description="Get task by task ID",
+    response_description="Task retrieved successfully",
+    response_model=TaskResponse,
+)
+async def get_task(
+    task_id: Annotated[int, Path(title="The Id of the task to get", gt=0)],
+    db: AsyncSession = Depends(get_db),
+) -> TaskResponse:
+    logging.info("Retrieving task")
+
+    repo = TaskRepository(db)
+    response = await repo.get_task_by_id(task_id)
+
+    if not response:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
+
+    return TaskResponse.model_validate(response)
+
+
+@router.get(
+    "/users/{user_id}",
+    status_code=status.HTTP_200_OK,
+    description="Get all the tasks of user with user_id",
+    response_description="Task retrieved successfully",
+    response_model=List[TaskResponse],
+    responses={
+        204: {
+            "description": "No tasks found for user",
+            "headers": {
+                "X-Message": {
+                    "description": "Status message",
+                    "schema": {"type": "string"},
+                }
+            },
+        },
+    },
+)
+async def get_tasks_per_user(
+    user_id: Annotated[int, Path(title="The Id of the user to get tasks to", gt=0)],
+    db: AsyncSession = Depends(get_db),
+) -> List[TaskResponse] | Response:
+    logging.info("Retrieving all tasks of a user")
+
+    repo = TaskRepository(db)
+    response = await repo.get_tasks_per_user(user_id)
+
+    if not response:
+        logger.info("User does not have tasks")
+        return Response(
+            status_code=status.HTTP_204_NO_CONTENT,
+            headers={"X-Message": "No tasks found for this user"},
+        )
+
+    return [TaskResponse.model_validate(task) for task in response]

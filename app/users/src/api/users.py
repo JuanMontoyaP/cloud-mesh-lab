@@ -51,13 +51,13 @@ async def create_user(
 
 @router.get(
     "/{user_id}",
-    status_code=200,
+    status_code=status.HTTP_200_OK,
     description="Retrieve a user with user ID",
     response_description="User retrieved successfully",
     response_model=UserResponse,
 )
 async def get_user(
-    user_id: Annotated[int, Path(title="The ID of the user to get")],
+    user_id: Annotated[int, Path(title="The ID of the user to get", gt=0)],
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
     logger.info("Retrieving user")
