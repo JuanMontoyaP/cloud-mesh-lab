@@ -1,7 +1,11 @@
+import logging
+
 from fastapi import APIRouter
 from sqlalchemy import text
 
 from src.db.session import AsyncSessionLocal
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/health", tags=["Health"])
 
@@ -14,4 +18,7 @@ async def health_check():
             await session.execute(text("SELECT 1"))
         return {"status": "healthy", "database": "connected"}
     except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
+        logger.exception("Health check failed %s", str(e))
+        return {
+            "status": "unhealthy",
+        }

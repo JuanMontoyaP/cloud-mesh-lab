@@ -6,6 +6,10 @@ from src.api.health import router as health
 
 from src.db.engine import engine, read_engine
 
+from src.core.logging import setup_logging
+
+setup_logging()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
