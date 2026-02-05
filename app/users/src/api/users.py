@@ -18,7 +18,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.post(
     "/",
-    status_code=201,
+    status_code=status.HTTP_201_CREATED,
     description="Create user with the specified data",
     response_description="User created successfully",
     response_model=UserResponse,
