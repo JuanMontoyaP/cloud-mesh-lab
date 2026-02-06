@@ -21,7 +21,7 @@ export class EcrStack extends Stack {
 
     this.output_ecr_uri(this.ecr_users.ecr, ECR_USERS_REPO);
 
-    const ECR_TASKS_REPO: string = "taks-service";
+    const ECR_TASKS_REPO: string = "tasks-service";
     this.ecr_tasks = new EcrStandard(this, "Tasks ECR", {
       repoName: ECR_TASKS_REPO,
       devTag: "dev-",
