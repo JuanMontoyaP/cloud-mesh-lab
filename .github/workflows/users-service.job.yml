@@ -7,6 +7,9 @@ on:
     branches:
       - "main"
 
+env:
+  AWS_REGION: us-east-1
+
 permissions:
   contents: read
 
@@ -19,6 +22,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions_tf_labs
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Build and Push image
         uses: docker/build-push-action@v6
