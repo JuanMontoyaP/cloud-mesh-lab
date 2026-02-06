@@ -1,4 +1,4 @@
-name: Build User Service Image
+name: Build Tasks Service Image
 on:
   push:
     branches:
