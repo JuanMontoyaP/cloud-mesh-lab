@@ -43,7 +43,12 @@ jobs:
         run: |
           IMAGE_NAME="${{ steps.login-ecr.outputs.registry }}/${{ env.SERVICE }}-service"
           DATE_TAG=$(date +'%Y%m%d')
-          GIT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          # Use actual commit SHA, not merge commit
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            GIT_SHA=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+          else
+            GIT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          fi
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             TAG_PREFIX="pr${{ github.event.pull_request.number }}"
@@ -52,7 +57,7 @@ jobs:
             TAG_PREFIX="${BRANCH_NAME//\//-}"
           fi
 
-          IMAGE_TAG="${TAG_PREFIX}-${DATE_TAG}-${GIT_SHA}"
+          IMAGE_TAG="${TAG_PREFIX}-${GIT_SHA}-${DATE_TAG}"
 
           echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
