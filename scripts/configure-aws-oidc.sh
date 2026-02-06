@@ -108,7 +108,7 @@ cat > /tmp/ecr-policy.json <<-EOF
             "Resource":
             [
                 "arn:aws:ecr:us-east-1:*:repository/users-service",
-                "arn:aws:ecr:us-east-1:*:repository/orders-service"
+                "arn:aws:ecr:us-east-1:*:repository/tasks-service"
             ]
         }
     ]
