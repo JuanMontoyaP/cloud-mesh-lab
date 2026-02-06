@@ -1,0 +1,27 @@
+name: Build User Service Image
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+
+permissions:
+  contents: read
+
+jobs:
+  docker-image:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./app/users
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build and Push image
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          tags: user/app:latest
