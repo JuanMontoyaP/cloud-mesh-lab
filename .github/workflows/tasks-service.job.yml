@@ -1,4 +1,4 @@
-name: Build Users Service Image
+name: Build Tasks Service Image
 on:
   push:
     branches:
@@ -19,7 +19,7 @@ jobs:
   build:
     uses: ./.github/workflows/build-push-image.job.yml
     with:
-      service: users
-      context: ./app/users
+      service: tasks
+      context: ./app/tasks
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
