@@ -4,9 +4,14 @@ SERVICES:=users tasks
 SERVICE:=all
 PARALLELISM:=$(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
-BUILD_TARGETS:=$(addprefix build-,$(SERVICES))
+# AWS ENV Variables
+AWS_REGION?=us-east-1
+AWS_ACCOUNT:=$(shell aws sts get-caller-identity --query Account --output text)
 
-.PHONY: dev build run clean help validate-service logs build-%
+BUILD_TARGETS:=$(addprefix build-,$(SERVICES))
+PUSH_TARGETS:=$(addprefix push-,$(SERVICES))
+
+.PHONY: dev build run clean help validate-service logs push build-% push-%
 
 help: ## Show help
 	@echo "Usage:"
@@ -28,17 +33,34 @@ validate-service:
 dev: validate-service
 	$(MAKE) -C $(SERVICE) $@
 
+sessions: ## Login into AWS ECR
+	@aws ecr get-login-password \
+		--region $(AWS_REGION) | \
+		docker login \
+		--username AWS \
+		--password-stdin $(AWS_ACCOUNT).dkr.ecr.$(AWS_REGION).amazonaws.com
+
 build: validate-service
 	@if [ "$(SERVICE)" == "all" ]; then \
-		echo "Service"; \
 		$(MAKE) $(BUILD_TARGETS) -j$(PARALLELISM); \
 	else \
 		$(MAKE) -C $(SERVICE) $@ SERVICE=$(SERVICE); \
 	fi
 
+push: sessions
+	@if [ "$(SERVICE)" == "all" ]; then \
+		$(MAKE) $(PUSH_TARGETS) -j$(PARALLELISM); \
+	else \
+		$(MAKE) -C $(SERVICE) $@ SERVICE=$(SERVICE); \
+	fi
+
+push-%:
+	echo "Pushing $* service..."
+	@$(MAKE) -C $* push SERVICE=$*
+
 build-%:
 	echo "Building $* service..."
-	$(MAKE) -C $* build SERVICE=$*
+	@$(MAKE) -C $* build SERVICE=$*
 
 run: validate-service
 	@if [ "$(SERVICE)" == "all" ]; then \

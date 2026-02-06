@@ -4,7 +4,7 @@
 DATE_TAG:=$(shell date +%Y%m%d)
 GIT_SHA:=$(shell git rev-parse --short HEAD)
 TAG_PREFIX:=dev
-IMAGE_NAME=$(AWS_ACCOUNT).dkr.ecr.$(AWS_REGION).amazonaws.com/$(SERVICE)
+IMAGE_NAME=$(AWS_ACCOUNT).dkr.ecr.$(AWS_REGION).amazonaws.com/$(SERVICE)-service
 IMAGE_TAG=$(TAG_PREFIX)-$(DATE_TAG)-$(GIT_SHA)
 
 # AWS ENV Variables
@@ -22,6 +22,13 @@ lock: ## Lock dependencies
 dev: sync lock db ## Run the service in local
 	uv run uvicorn src.main:app --reload --host 0.0.0.0 --port $(PORT)
 
+sessions: ## Login into AWS ECR
+	aws ecr get-login-password \
+		--region $(AWS_REGION) | \
+		docker login \
+		--username AWS \
+		--password-stdin $(AWS_ACCOUNT).dkr.ecr.$(AWS_REGION).amazonaws.com
+
 build: sync lock ## Build Docker image
 	docker build \
 	--platform linux/amd64 \
@@ -29,6 +36,11 @@ build: sync lock ## Build Docker image
 	--sbom=false \
 	-t $(IMAGE_NAME):$(IMAGE_TAG) \
 	.
+
+push: build
+	docker push \
+		$(IMAGE_NAME) \
+		--all-tags
 
 migrations: ## Run migrations
 	uv run alembic upgrade head
