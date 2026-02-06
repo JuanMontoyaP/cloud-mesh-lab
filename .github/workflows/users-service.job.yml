@@ -31,9 +31,16 @@ jobs:
           role-session-name: GitHubActions_tf_labs
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: service/users
+
       - name: Build and Push image
         uses: docker/build-push-action@v6
         with:
           context: ./app/users
           push: false
-          tags: user/app:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
