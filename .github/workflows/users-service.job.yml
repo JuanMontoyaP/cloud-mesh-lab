@@ -46,7 +46,7 @@ jobs:
           GIT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            TAG_PREFIX="pr-${{ github.event.pull_request.number }}"
+            TAG_PREFIX="pr${{ github.event.pull_request.number }}"
           else
             BRANCH_NAME="${{ github.ref_name }}"
             TAG_PREFIX="${BRANCH_NAME//\//-}"
