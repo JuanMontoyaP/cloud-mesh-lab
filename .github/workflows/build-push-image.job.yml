@@ -1,0 +1,135 @@
+name: Build and Push Image
+on:
+  workflow_call:
+    inputs:
+      service:
+        description: 'Service name (used for ECR repository naming)'
+        required: true
+        type: string
+      context:
+        description: 'Docker build context path'
+        required: true
+        type: string
+      dockerfile:
+        description: 'Path to Dockerfile (relative to context)'
+        required: false
+        type: string
+        default: 'Dockerfile'
+      aws-region:
+        description: 'AWS Region'
+        required: false
+        type: string
+        default: 'us-east-1'
+      tag-latest-on-main:
+        description: 'Tag image as latest when pushing to main'
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      AWS_ROLE_ARN:
+        description: 'AWS Role ARN for OIDC authentication'
+        required: true
+    outputs:
+      image_name:
+        description: 'Full image name (without tag)'
+        value: ${{ jobs.build-push.outputs.image_name }}
+      image_tag:
+        description: 'Image tag'
+        value: ${{ jobs.build-push.outputs.image_tag }}
+      full_image:
+        description: 'Full image reference (name:tag)'
+        value: ${{ jobs.build-push.outputs.full_image }}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    outputs:
+      image_name: ${{ steps.image.outputs.image_name }}
+      image_tag: ${{ steps.image.outputs.image_tag }}
+      full_image: ${{ steps.image.outputs.full_image }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions_${{ inputs.service }}
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+
+      - name: Set Image Tag
+        id: image
+        run: |
+          IMAGE_NAME="${{ steps.login-ecr.outputs.registry }}/${{ inputs.service }}-service"
+          DATE_TAG=$(date +'%Y%m%d')
+
+          # Use actual commit SHA, not merge commit
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            GIT_SHA=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+          else
+            GIT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          fi
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            TAG_PREFIX="pr${{ github.event.pull_request.number }}"
+          else
+            BRANCH_NAME="${{ github.ref_name }}"
+            TAG_PREFIX="${BRANCH_NAME//\//-}"
+          fi
+
+          IMAGE_TAG="${TAG_PREFIX}-${GIT_SHA}-${DATE_TAG}"
+
+          echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "full_image=${IMAGE_NAME}:${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+          echo "📦 Image: ${IMAGE_NAME}:${IMAGE_TAG}"
+
+      - name: Build and Push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.context }}/${{ inputs.dockerfile }}
+          provenance: false
+          sbom: false
+          cache-from: type=gha,scope=${{ inputs.service }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.service }}
+          push: true
+          tags: ${{ steps.image.outputs.full_image }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.title=${{ inputs.service }}-service
+
+      - name: Tag as Latest
+        if: inputs.tag-latest-on-main && github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          ECR_REPOSITORY: ${{ inputs.service }}-service
+        run: |
+          MANIFEST=$(aws ecr batch-get-image \
+            --repository-name $ECR_REPOSITORY \
+            --image-ids imageTag=${{ steps.image.outputs.image_tag }} \
+            --query 'images[].imageManifest' \
+            --output text)
+
+          aws ecr put-image \
+            --repository-name $ECR_REPOSITORY \
+            --image-tag latest \
+            --image-manifest "$MANIFEST"
+
+          echo "✅ Tagged ${{ steps.image.outputs.image_name }}:latest"
+
