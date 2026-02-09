@@ -1,14 +1,14 @@
 # ----------------------------
 # Builder stage
 # ----------------------------
-FROM python:3.14-slim AS builder
+FROM python:3.14-alpine AS builder
 
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     gcc \
     g++ \
-    default-libmysqlclient-dev \
-    build-essential \
-    pkg-config \
+    musl-dev \
+    mariadb-dev \
+    pkgconfig \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
@@ -29,7 +29,7 @@ COPY src ./src
 # ----------------------------
 # Runtime stage
 # ----------------------------
-FROM python:3.14-slim-trixie
+FROM python:3.14-alpine
 
 # Security & performance
 ENV PYTHONDONTWRITEBYTECODE=1 \
