@@ -12,6 +12,7 @@ export class NetworkStack extends Stack {
 
     this.vpc = new VpcStandard(this, "ECR Cluster VPC", {
       cidr: "10.0.0.0/16",
+      logGroupName: "/vpc/VpcFlowLogs",
     });
 
     Object.entries(BASE_TAGS).forEach(([key, value]) =>
