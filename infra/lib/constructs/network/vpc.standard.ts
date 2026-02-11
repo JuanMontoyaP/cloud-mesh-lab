@@ -45,6 +45,8 @@ export class VpcStandard extends Construct {
       createInternetGateway: true,
       ipProtocol: IpProtocol.IPV4_ONLY,
       restrictDefaultSecurityGroup: true,
+      enableDnsSupport: true,
+      enableDnsHostnames: true,
       subnetConfiguration: [
         {
           cidrMask: 24,
