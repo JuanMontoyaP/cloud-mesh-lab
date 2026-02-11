@@ -7,7 +7,7 @@ import { stackName } from "../lib/config/naming";
 
 const app = new App();
 
-new EcrStack(app, stackName("cloud-mesh", "dev", "ecr"), {
+const ecrStack = new EcrStack(app, stackName("cloud-mesh", "dev", "ecr"), {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
@@ -31,4 +31,6 @@ new ClustersStack(app, stackName("cloud-mesh", "dev", "ecs"), {
     region: process.env.CDK_DEFAULT_REGION,
   },
   vpc: networkStack.vpc.vpc,
+  usersEcr: ecrStack.ecrUsers.ecr,
+  tasksEcr: ecrStack.ecrTasks.ecr,
 });

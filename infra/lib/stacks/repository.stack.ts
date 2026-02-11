@@ -6,39 +6,39 @@ import { BASE_TAGS } from "../config/tags";
 import { EcrStandard } from "../constructs/data/ecr.standard";
 
 export class EcrStack extends Stack {
-  public readonly ecr_users: EcrStandard;
-  public readonly ecr_tasks: EcrStandard;
+  public readonly ecrUsers: EcrStandard;
+  public readonly ecrTasks: EcrStandard;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
     const ECR_USERS_REPO: string = "users-service";
-    this.ecr_users = new EcrStandard(this, "Users ECR", {
+    this.ecrUsers = new EcrStandard(this, "Users ECR", {
       repoName: ECR_USERS_REPO,
       devTag: "dev-",
       prodTag: "latest",
     });
 
-    this.output_ecr_uri(this.ecr_users.ecr, ECR_USERS_REPO);
+    this.output_ecr_uri(this.ecrUsers.ecr, ECR_USERS_REPO);
 
     const ECR_TASKS_REPO: string = "tasks-service";
-    this.ecr_tasks = new EcrStandard(this, "Tasks ECR", {
+    this.ecrTasks = new EcrStandard(this, "Tasks ECR", {
       repoName: ECR_TASKS_REPO,
       devTag: "dev-",
       prodTag: "latest",
     });
 
-    this.output_ecr_uri(this.ecr_tasks.ecr, ECR_TASKS_REPO);
+    this.output_ecr_uri(this.ecrTasks.ecr, ECR_TASKS_REPO);
 
     Object.entries(BASE_TAGS).forEach(([key, value]) =>
       Tags.of(this).add(key, value),
     );
   }
 
-  private output_ecr_uri(ecr: Repository, ecr_name: string) {
-    new CfnOutput(this, ecr_name, {
+  private output_ecr_uri(ecr: Repository, ecrName: string) {
+    new CfnOutput(this, ecrName, {
       value: ecr.repositoryUri,
-      description: `The URI of the ${ecr_name} ECR repo`,
+      description: `The URI of the ${ecrName} ECR repo`,
     });
   }
 }
