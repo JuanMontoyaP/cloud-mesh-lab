@@ -1,13 +1,52 @@
 #!/opt/homebrew/opt/node/bin/node
-import * as cdk from "aws-cdk-lib/core";
+import { App } from "aws-cdk-lib/core";
 import { EcrStack } from "../lib/stacks/repository.stack";
+import { NetworkStack } from "../lib/stacks/network.stack";
+import { ClustersStack } from "../lib/stacks/clusters.stack";
+import { ServicesStack } from "../lib/stacks/services.stack";
 import { stackName } from "../lib/config/naming";
 
-const app = new cdk.App();
+const app = new App();
 
-new EcrStack(app, stackName("cloud-mesh", "dev", "ecr"), {
+const ecrStack = new EcrStack(app, stackName("cloud-mesh", "dev", "ecr"), {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
   },
+});
+
+const networkStack = new NetworkStack(
+  app,
+  stackName("cloud-mesh", "dev", "vpc"),
+  {
+    env: {
+      account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: process.env.CDK_DEFAULT_REGION,
+    },
+  },
+);
+
+const clusterStack = new ClustersStack(
+  app,
+  stackName("cloud-mesh", "dev", "ecs"),
+  {
+    env: {
+      account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: process.env.CDK_DEFAULT_REGION,
+    },
+    vpc: networkStack.vpc.vpc,
+  },
+);
+
+new ServicesStack(app, stackName("cloud-mesh", "dev", "services"), {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+  cluster: clusterStack.ecsCluster.ecs,
+  clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
+  usersEcr: ecrStack.ecrUsers.ecr,
+  usersSg: [networkStack.httpSg.securityGroup],
+  tasksEcr: ecrStack.ecrTasks.ecr,
+  tasksSg: [networkStack.httpSg.securityGroup],
 });

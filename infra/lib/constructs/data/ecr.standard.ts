@@ -7,7 +7,7 @@ import {
 import { RemovalPolicy, Duration } from "aws-cdk-lib";
 import { Construct } from "constructs";
 
-export interface EcrProps {
+export interface EcrStandardProps {
   repoName: string;
   prodTag: string;
   devTag: string;
@@ -16,7 +16,7 @@ export interface EcrProps {
 export class EcrStandard extends Construct {
   public ecr: Repository;
 
-  constructor(scope: Construct, id: string, props: EcrProps) {
+  constructor(scope: Construct, id: string, props: EcrStandardProps) {
     super(scope, id);
 
     const exclusionFilters = this.getExclusionFilters([
