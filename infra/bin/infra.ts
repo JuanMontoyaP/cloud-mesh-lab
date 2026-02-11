@@ -35,8 +35,6 @@ const clusterStack = new ClustersStack(
       region: process.env.CDK_DEFAULT_REGION,
     },
     vpc: networkStack.vpc.vpc,
-    usersEcr: ecrStack.ecrUsers.ecr,
-    tasksEcr: ecrStack.ecrTasks.ecr,
   },
 );
 
@@ -46,8 +44,9 @@ new ServicesStack(app, stackName("cloud-mesh", "dev", "services"), {
     region: process.env.CDK_DEFAULT_REGION,
   },
   cluster: clusterStack.ecsCluster.ecs,
-  usersTaskDefinition: clusterStack.usersTaskDef.taskDefinition,
+  clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
+  usersEcr: ecrStack.ecrUsers.ecr,
   usersSg: [networkStack.httpSg.securityGroup],
-  tasksTaskDefinition: clusterStack.tasksTaskDef.taskDefinition,
+  tasksEcr: ecrStack.ecrTasks.ecr,
   tasksSg: [networkStack.httpSg.securityGroup],
 });
