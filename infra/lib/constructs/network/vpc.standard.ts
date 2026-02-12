@@ -59,6 +59,11 @@ export class VpcStandard extends Construct {
           name: "PrivateSubnet",
           subnetType: SubnetType.PRIVATE_WITH_EGRESS,
         },
+        {
+          cidrMask: 24,
+          name: "IsolatedSubnet",
+          subnetType: SubnetType.PRIVATE_ISOLATED,
+        },
       ],
     });
   }
