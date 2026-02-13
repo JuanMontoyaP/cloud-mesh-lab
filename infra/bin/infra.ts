@@ -47,6 +47,7 @@ new AuroraStack(app, stackName("cloud-mesh", "dev", "db"), {
   vpc: networkStack.vpc.vpc,
   dbSg: [networkStack.dbSg.securityGroup],
   guiSg: [networkStack.httpSg.securityGroup],
+  lambdaSg: [networkStack.lambdaSg.securityGroup],
   cluster: clusterStack.ecsCluster.ecs,
   clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
 });

@@ -4,9 +4,10 @@ import {
   DatabaseCluster,
   DatabaseClusterEngine,
   AuroraMysqlEngineVersion,
+  Credentials,
 } from "aws-cdk-lib/aws-rds";
 import {
-  Vpc,
+  IVpc,
   SubnetType,
   ISecurityGroup,
   InstanceType,
@@ -17,7 +18,7 @@ import { RemovalPolicy } from "aws-cdk-lib";
 import { Construct } from "constructs";
 
 export interface MySqlAuroraStandardProps {
-  vpc: Vpc;
+  vpc: IVpc;
   clusterName: string;
   description: string;
   dbSg: ISecurityGroup[];
@@ -42,7 +43,7 @@ export class MySqlAuroraStandard extends Construct {
 
   private createDbSubnetGroup(
     id: string,
-    vpc: Vpc,
+    vpc: IVpc,
     subnetGroupName: string,
     description: string,
   ) {
@@ -59,12 +60,18 @@ export class MySqlAuroraStandard extends Construct {
     id: string,
     clusterIdentifier: string,
     dbSg: ISecurityGroup[],
-    vpc: Vpc,
+    vpc: IVpc,
   ) {
+    const instanceType = InstanceType.of(
+      InstanceClass.T4G,
+      InstanceSize.MEDIUM,
+    );
+
     this.auroraMySqlCluster = new DatabaseCluster(this, id, {
       engine: DatabaseClusterEngine.auroraMysql({
         version: AuroraMysqlEngineVersion.VER_3_11_1,
       }),
+      credentials: Credentials.fromGeneratedSecret("admin"),
       clusterIdentifier: clusterIdentifier,
       deletionProtection: false,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -72,9 +79,11 @@ export class MySqlAuroraStandard extends Construct {
       subnetGroup: this.dbSubnetGroup,
       vpc: vpc,
       writer: ClusterInstance.provisioned("writer", {
-        instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.MEDIUM),
+        instanceType: instanceType,
       }),
-      readers: [ClusterInstance.provisioned("reader")],
+      readers: [
+        ClusterInstance.provisioned("reader", { instanceType: instanceType }),
+      ],
     });
   }
 }

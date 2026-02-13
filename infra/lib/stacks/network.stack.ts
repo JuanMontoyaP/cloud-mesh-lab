@@ -11,6 +11,7 @@ export class NetworkStack extends Stack {
   public readonly vpc: VpcStandard;
   public readonly httpSg: SecurityGroupStandard;
   public readonly dbSg: SecurityGroupStandard;
+  public readonly lambdaSg: SecurityGroupStandard;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -33,6 +34,12 @@ export class NetworkStack extends Stack {
       ],
     });
 
+    this.lambdaSg = new SecurityGroupStandard(this, "LambdaSg", {
+      vpc: this.vpc.vpc,
+      securityGroupName: "lambda-sg",
+      description: "Security group for allowing traffic from Lambda functions",
+    });
+
     this.dbSg = new SecurityGroupStandard(this, "DbSg", {
       vpc: this.vpc.vpc,
       securityGroupName: "db-sg",
@@ -42,6 +49,11 @@ export class NetworkStack extends Stack {
           peer: this.httpSg.securityGroup,
           port: Port.tcp(3306),
           description: "Allow backend to access DB",
+        },
+        {
+          peer: this.lambdaSg.securityGroup,
+          port: Port.tcp(3306),
+          description: "Allow Lambda to access DB",
         },
       ],
     });

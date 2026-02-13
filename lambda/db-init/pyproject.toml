@@ -1,0 +1,11 @@
+[project]
+name = "db-init"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "boto3>=1.42.48",
+    "cfnresponse>=1.1.5",
+    "mysql-connector-python>=9.6.0",
+]
