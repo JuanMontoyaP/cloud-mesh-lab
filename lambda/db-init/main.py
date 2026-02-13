@@ -29,7 +29,7 @@ def get_secret_value(arn: str) -> Dict[str, str]:
         logger.info("Successfully retrieved secret from Secrets Manager.")
         return json.loads(secret_value)
     except Exception as e:
-        logger.error("Error retrieving secret from ARN %s: %s", arn, str(e))
+        logger.error("Error retrieving secret from Secrets Manager: %s", str(e))
         raise
 
 
