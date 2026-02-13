@@ -654,6 +654,9 @@ dev = [
     { name = "alembic" },
     { name = "fastapi", extra = ["standard"] },
 ]
+migrations = [
+    { name = "alembic" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -670,6 +673,7 @@ dev = [
     { name = "alembic", specifier = ">=1.18.3" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.128.1" },
 ]
+migrations = [{ name = "alembic", specifier = ">=1.18.3" }]
 
 [[package]]
 name = "typer"

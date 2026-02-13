@@ -14,7 +14,5 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "alembic>=1.18.3",
-    "fastapi[standard]>=0.128.1",
-]
+dev = ["fastapi[standard]>=0.128.1"]
+migrations = ["alembic>=1.18.3"]

@@ -1,3 +1,4 @@
+import os
 import asyncio
 from logging.config import fileConfig
 
@@ -14,7 +15,8 @@ from src.db.models import Base, Task
 # Alembic Config object
 config = context.config
 
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+db_url = os.getenv("DATABASE_URL", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", db_url)
 
 # Setup logging
 if config.config_file_name is not None:
