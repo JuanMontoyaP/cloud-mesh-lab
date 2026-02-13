@@ -1,8 +1,7 @@
 import { Stack, StackProps, Duration, Tags } from "aws-cdk-lib";
-import { Cluster } from "aws-cdk-lib/aws-ecs";
 import { Repository } from "aws-cdk-lib/aws-ecr";
 import { LogGroup } from "aws-cdk-lib/aws-logs";
-import { ContainerImage, LogDrivers } from "aws-cdk-lib/aws-ecs";
+import { ContainerImage, LogDrivers, Cluster } from "aws-cdk-lib/aws-ecs";
 import { SecurityGroup, SubnetType } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 

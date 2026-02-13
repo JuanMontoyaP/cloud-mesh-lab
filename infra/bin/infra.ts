@@ -3,6 +3,7 @@ import { App } from "aws-cdk-lib/core";
 import { EcrStack } from "../lib/stacks/repository.stack";
 import { NetworkStack } from "../lib/stacks/network.stack";
 import { ClustersStack } from "../lib/stacks/clusters.stack";
+import { AuroraStack } from "../lib/stacks/aurora.stack";
 import { ServicesStack } from "../lib/stacks/services.stack";
 import { stackName } from "../lib/config/naming";
 
@@ -37,6 +38,19 @@ const clusterStack = new ClustersStack(
     vpc: networkStack.vpc.vpc,
   },
 );
+
+new AuroraStack(app, stackName("cloud-mesh", "dev", "db"), {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+  vpc: networkStack.vpc.vpc,
+  dbSg: [networkStack.dbSg.securityGroup],
+  guiSg: [networkStack.httpSg.securityGroup],
+  lambdaSg: [networkStack.lambdaSg.securityGroup],
+  cluster: clusterStack.ecsCluster.ecs,
+  clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
+});
 
 new ServicesStack(app, stackName("cloud-mesh", "dev", "services"), {
   env: {

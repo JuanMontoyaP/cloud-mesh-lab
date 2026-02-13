@@ -342,3 +342,5 @@ node_modules
 .cdk.staging
 cdk.out
 
+.vscode/
+.build/
