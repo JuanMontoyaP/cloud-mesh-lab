@@ -26,7 +26,7 @@ def get_secret_value(arn: str) -> Dict[str, str]:
     try:
         response = client.get_secret_value(SecretId=arn)
         secret_value = response.get("SecretString", "")
-        logger.info("Successfully retrieved secret from ARN: %s", arn)
+        logger.info("Successfully retrieved secret from Secrets Manager.")
         return json.loads(secret_value)
     except Exception as e:
         logger.error("Error retrieving secret from ARN %s: %s", arn, str(e))
