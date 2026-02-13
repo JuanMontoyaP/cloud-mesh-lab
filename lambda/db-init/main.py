@@ -56,12 +56,7 @@ def initialize_database(
         tasks_username: Tasks database username
         tasks_pwd: Tasks database password
     """
-    logger.info(
-        "Initializing database at %s:%d with user '%s'.",
-        db_host,
-        db_port,
-        username,
-    )
+    logger.info("Initializing database connection.")
     conn = None
     try:
         conn = mysql.connector.connect(
