@@ -14,16 +14,16 @@ import { Construct } from "constructs";
 
 import { MySqlAuroraStandard } from "../constructs/data/aurora.standard";
 import { TaskDefStandard } from "../constructs/services/task-definition.standard";
+import { CustomResourceStandard } from "../constructs/shared/custom-resource.standard";
 import { ServiceStandard } from "../constructs/services/service.standard";
 import { SecretsStandard } from "../constructs/shared/secrets.standard";
 import { LambdaStandard } from "../constructs/compute/lambda.standard";
 
 import { BASE_TAGS } from "../config/tags";
 
-import * as fs from "fs";
 import * as path from "path";
-import { execSync } from "child_process";
-import { Version } from "aws-cdk-lib/aws-lambda";
+
+import { createLambdaPackage } from "../helpers/lambda-code.helper";
 
 export interface AuroraStackProps extends StackProps {
   readonly vpc: Vpc;
@@ -40,6 +40,7 @@ export class AuroraStack extends Stack {
   private initLambda: LambdaStandard;
   private userPwdSecret: SecretsStandard;
   private tasksPwdSecret: SecretsStandard;
+  private dbInitResource: CustomResourceStandard;
 
   constructor(scope: Construct, id: string, props: AuroraStackProps) {
     super(scope, id, props);
@@ -106,42 +107,7 @@ export class AuroraStack extends Stack {
 
     const lambdaPath = path.join(__dirname, "../../../lambda/db-init");
     const outputPath = path.join(__dirname, "../../../.build/lambda/db-init");
-
-    if (!fs.existsSync(outputPath)) {
-      fs.mkdirSync(outputPath, { recursive: true });
-    }
-
-    console.log("Building Lambda function with UV...");
-
-    try {
-      execSync(
-        "uv export --frozen --no-dev --no-editable -o requirements.txt",
-        {
-          cwd: lambdaPath,
-          stdio: "inherit",
-        },
-      );
-
-      execSync(
-        `uv pip install --no-installer-metadata \
-          --no-compile-bytecode \
-          --python-platform x86_64-manylinux2014 \
-          --python 3.13 \
-          --target ${outputPath} -r requirements.txt`,
-        {
-          cwd: lambdaPath,
-          stdio: "inherit",
-        },
-      );
-
-      fs.copyFileSync(
-        path.join(lambdaPath, "main.py"),
-        path.join(outputPath, "main.py"),
-      );
-    } catch (error) {
-      console.error("Error building Lambda function:", error);
-      throw error;
-    }
+    createLambdaPackage("main.py", lambdaPath, outputPath);
 
     this.initLambda = new LambdaStandard(this, "db-init-lambda", {
       codePath: outputPath,
@@ -159,13 +125,9 @@ export class AuroraStack extends Stack {
     this.userPwdSecret.secret.grantRead(this.initLambda.lambdaFunction);
     this.tasksPwdSecret.secret.grantRead(this.initLambda.lambdaFunction);
 
-    const lambdaProvider = new Provider(this, "db-init-provider", {
-      onEventHandler: this.initLambda.lambdaFunction,
-    });
-
-    const initDbResource = new CustomResource(this, "db-init-resource", {
-      serviceToken: lambdaProvider.serviceToken,
-      properties: {
+    this.dbInitResource = new CustomResourceStandard(this, "db-init-resource", {
+      lambdaFunction: this.initLambda.lambdaFunction,
+      customResourceProps: {
         DbSecretArn: this.dbCluster.auroraMySqlCluster.secret!.secretArn,
         UsersPasswordArn: this.userPwdSecret.secret.secretArn,
         TasksPasswordArn: this.tasksPwdSecret.secret.secretArn,
@@ -173,7 +135,7 @@ export class AuroraStack extends Stack {
       },
     });
 
-    initDbResource.node.addDependency(this.dbCluster);
+    this.dbInitResource.resource.node.addDependency(this.dbCluster);
 
     Object.entries(BASE_TAGS).forEach(([key, value]) =>
       Tags.of(this).add(key, value),
