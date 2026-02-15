@@ -1,7 +1,8 @@
 import logging
 
-from fastapi import APIRouter
 from sqlalchemy import text
+from fastapi import APIRouter, status
+from fastapi.responses import JSONResponse
 
 from src.db.session import AsyncSessionLocal
 
@@ -19,6 +20,7 @@ async def health_check():
         return {"status": "healthy", "database": "connected"}
     except Exception as e:
         logger.exception("Health check failed %s", str(e))
-        return {
-            "status": "unhealthy",
-        }
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"status": "unhealthy", "database": "disconnected"},
+        )
