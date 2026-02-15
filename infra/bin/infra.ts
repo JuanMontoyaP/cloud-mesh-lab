@@ -60,7 +60,7 @@ new MigrationStack(app, stackName("cloud-mesh", "dev", "migrations"), {
   },
   dbCluster: auroraStack.dbCluster.auroraMySqlCluster,
   usersDbSecret: auroraStack.userPwdSecret.secret,
-  tasksDbSecret: auroraStack.tasksPwdSecret.secret!,
+  tasksDbSecret: auroraStack.tasksPwdSecret.secret,
   clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
 });
 
@@ -70,6 +70,9 @@ new ServicesStack(app, stackName("cloud-mesh", "dev", "services"), {
     region: process.env.CDK_DEFAULT_REGION,
   },
   cluster: clusterStack.ecsCluster.ecs,
+  dbCluster: auroraStack.dbCluster.auroraMySqlCluster,
+  usersDbSecret: auroraStack.userPwdSecret.secret,
+  tasksDbSecret: auroraStack.tasksPwdSecret.secret,
   clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
   usersEcr: ecrStack.ecrUsers.ecr,
   usersSg: [networkStack.httpSg.securityGroup],

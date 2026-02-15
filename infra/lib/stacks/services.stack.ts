@@ -1,9 +1,16 @@
+import {
+  ContainerImage,
+  LogDrivers,
+  Cluster,
+  Secret,
+} from "aws-cdk-lib/aws-ecs";
 import { Stack, StackProps, Duration, Tags } from "aws-cdk-lib";
 import { Repository } from "aws-cdk-lib/aws-ecr";
 import { LogGroup } from "aws-cdk-lib/aws-logs";
-import { ContainerImage, LogDrivers, Cluster } from "aws-cdk-lib/aws-ecs";
+import { DatabaseCluster } from "aws-cdk-lib/aws-rds";
 import { SecurityGroup, SubnetType } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
+import * as secretManager from "aws-cdk-lib/aws-secretsmanager";
 
 import { TaskDefStandard } from "../constructs/services/task-definition.standard";
 import { ServiceStandard } from "../constructs/services/service.standard";
@@ -13,6 +20,9 @@ import { BASE_TAGS } from "../config/tags";
 export interface ServiceStackProps extends StackProps {
   cluster: Cluster;
   clusterLogGroup: LogGroup;
+  dbCluster: DatabaseCluster;
+  usersDbSecret: secretManager.Secret;
+  tasksDbSecret: secretManager.Secret;
   usersEcr: Repository;
   tasksEcr: Repository;
   usersSg: SecurityGroup[];
@@ -54,10 +64,26 @@ export class ServicesStack extends Stack {
               logGroup: props.clusterLogGroup,
             }),
             environment: {
-              DATABASE_URL:
-                "mysql+asyncmy://users_user:users_password@localhost:3306/users_db",
-              ENVIRONMENT: "development",
-              DEBUG: "false",
+              DATABASE_NAME: "users_db",
+              DATABASE_READ_HOST: props.dbCluster.clusterReadEndpoint.hostname,
+            },
+            secrets: {
+              DATABASE_HOST: Secret.fromSecretsManager(
+                props.dbCluster.secret!,
+                "host",
+              ),
+              DATABASE_PORT: Secret.fromSecretsManager(
+                props.dbCluster.secret!,
+                "port",
+              ),
+              DATABASE_USER: Secret.fromSecretsManager(
+                props.usersDbSecret,
+                "username",
+              ),
+              DATABASE_PASSWORD: Secret.fromSecretsManager(
+                props.usersDbSecret,
+                "password",
+              ),
             },
           },
         },
@@ -90,12 +116,26 @@ export class ServicesStack extends Stack {
               logGroup: props.clusterLogGroup,
             }),
             environment: {
-              DATABASE_URL:
-                "mysql+asyncmy://users_user:users_password@localhost:3306/users_db",
-              DATABASE_URL_READ:
-                "mysql+asyncmy://users_user:users_password@localhost:3306/users_db",
-              ENVIRONMENT: "development",
-              DEBUG: "false",
+              DATABASE_NAME: "tasks_db",
+              DATABASE_READ_HOST: props.dbCluster.clusterReadEndpoint.hostname,
+            },
+            secrets: {
+              DATABASE_HOST: Secret.fromSecretsManager(
+                props.dbCluster.secret!,
+                "host",
+              ),
+              DATABASE_PORT: Secret.fromSecretsManager(
+                props.dbCluster.secret!,
+                "port",
+              ),
+              DATABASE_USER: Secret.fromSecretsManager(
+                props.tasksDbSecret,
+                "username",
+              ),
+              DATABASE_PASSWORD: Secret.fromSecretsManager(
+                props.tasksDbSecret,
+                "password",
+              ),
             },
           },
         },
