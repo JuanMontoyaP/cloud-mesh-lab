@@ -1,14 +1,19 @@
 import { Stack, StackProps } from "aws-cdk-lib";
 import { LogGroup } from "aws-cdk-lib/aws-logs";
-import { ContainerImage, LogDrivers, Cluster } from "aws-cdk-lib/aws-ecs";
+import { DatabaseCluster } from "aws-cdk-lib/aws-rds";
+import { ContainerImage, LogDrivers, Secret } from "aws-cdk-lib/aws-ecs";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { Construct } from "constructs/lib/construct";
+import * as secretManager from "aws-cdk-lib/aws-secretsmanager";
 
 import { TaskDefStandard } from "../constructs/services/task-definition.standard";
 
 import * as path from "path";
 
 export interface MigrationStackProps extends StackProps {
+  dbCluster: DatabaseCluster;
+  usersDbSecret: secretManager.Secret;
+  tasksDbSecret: secretManager.Secret;
   clusterLogGroup: LogGroup;
 }
 
@@ -42,8 +47,26 @@ export class MigrationStack extends Stack {
               logGroup: props.clusterLogGroup,
             }),
             environment: {
-              DATABASE_URL:
-                "mysql+asyncmy://tasks_user:jP0MFJzaNUdXNnDnU1rCCQnFdhAUpYFr@servicemeshdb.cluster-cx0gc0oour0m.us-east-1.rds.amazonaws.com:3306/tasks_db",
+              DATABASE_NAME: "tasks_db",
+              DATABASE_READ_HOST: props.dbCluster.clusterReadEndpoint.hostname,
+            },
+            secrets: {
+              DATABASE_HOST: Secret.fromSecretsManager(
+                props.dbCluster.secret!,
+                "host",
+              ),
+              DATABASE_PORT: Secret.fromSecretsManager(
+                props.dbCluster.secret!,
+                "port",
+              ),
+              DATABASE_USER: Secret.fromSecretsManager(
+                props.tasksDbSecret,
+                "username",
+              ),
+              DATABASE_PASSWORD: Secret.fromSecretsManager(
+                props.tasksDbSecret,
+                "password",
+              ),
             },
           },
         },
@@ -73,8 +96,26 @@ export class MigrationStack extends Stack {
               logGroup: props.clusterLogGroup,
             }),
             environment: {
-              DATABASE_URL:
-                "mysql+asyncmy://users_user:u76ywnGPQ5xJWKn0ELMa8E0lXfcZwVhR@servicemeshdb.cluster-cx0gc0oour0m.us-east-1.rds.amazonaws.com:3306/users_db",
+              DATABASE_NAME: "users_db",
+              DATABASE_READ_HOST: props.dbCluster.clusterReadEndpoint.hostname,
+            },
+            secrets: {
+              DATABASE_HOST: Secret.fromSecretsManager(
+                props.dbCluster.secret!,
+                "host",
+              ),
+              DATABASE_PORT: Secret.fromSecretsManager(
+                props.dbCluster.secret!,
+                "port",
+              ),
+              DATABASE_USER: Secret.fromSecretsManager(
+                props.usersDbSecret,
+                "username",
+              ),
+              DATABASE_PASSWORD: Secret.fromSecretsManager(
+                props.usersDbSecret,
+                "password",
+              ),
             },
           },
         },

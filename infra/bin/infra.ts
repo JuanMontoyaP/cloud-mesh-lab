@@ -40,7 +40,7 @@ const clusterStack = new ClustersStack(
   },
 );
 
-new AuroraStack(app, stackName("cloud-mesh", "dev", "db"), {
+const auroraStack = new AuroraStack(app, stackName("cloud-mesh", "dev", "db"), {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
@@ -58,6 +58,9 @@ new MigrationStack(app, stackName("cloud-mesh", "dev", "migrations"), {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
   },
+  dbCluster: auroraStack.dbCluster.auroraMySqlCluster,
+  usersDbSecret: auroraStack.userPwdSecret.secret,
+  tasksDbSecret: auroraStack.tasksPwdSecret.secret!,
   clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
 });
 

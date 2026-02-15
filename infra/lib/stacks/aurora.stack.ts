@@ -1,14 +1,6 @@
-import {
-  Stack,
-  StackProps,
-  Duration,
-  Tags,
-  CustomResource,
-  CfnOutput,
-} from "aws-cdk-lib";
+import { Stack, StackProps, Duration, Tags, CfnOutput } from "aws-cdk-lib";
 import { Vpc, SecurityGroup, SubnetType } from "aws-cdk-lib/aws-ec2";
 import { ContainerImage, Cluster, LogDrivers } from "aws-cdk-lib/aws-ecs";
-import { Provider } from "aws-cdk-lib/custom-resources";
 import { LogGroup } from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
 
@@ -36,10 +28,10 @@ export interface AuroraStackProps extends StackProps {
 
 export class AuroraStack extends Stack {
   public readonly dbCluster: MySqlAuroraStandard;
+  public readonly userPwdSecret: SecretsStandard;
+  public readonly tasksPwdSecret: SecretsStandard;
   private dbGuiDef: TaskDefStandard;
   private initLambda: LambdaStandard;
-  private userPwdSecret: SecretsStandard;
-  private tasksPwdSecret: SecretsStandard;
   private dbInitResource: CustomResourceStandard;
 
   constructor(scope: Construct, id: string, props: AuroraStackProps) {
@@ -76,8 +68,9 @@ export class AuroraStack extends Stack {
             }),
             environment: {
               PMA_PORT: "3306",
-              PMA_ARBITRARY: "1", // Allow connecting to any server
               MYSQL_ROOT_PASSWORD: "", // Leave empty, user will provide credentials
+              PMA_HOST:
+                this.dbCluster.auroraMySqlCluster.clusterReadEndpoint.hostname,
             },
           },
         },

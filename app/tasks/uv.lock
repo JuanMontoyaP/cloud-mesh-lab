@@ -651,7 +651,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "alembic" },
     { name = "fastapi", extra = ["standard"] },
 ]
 migrations = [
@@ -669,10 +668,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [
-    { name = "alembic", specifier = ">=1.18.3" },
-    { name = "fastapi", extras = ["standard"], specifier = ">=0.128.1" },
-]
+dev = [{ name = "fastapi", extras = ["standard"], specifier = ">=0.128.1" }]
 migrations = [{ name = "alembic", specifier = ">=1.18.3" }]
 
 [[package]]
