@@ -6,6 +6,7 @@ import { ClustersStack } from "../lib/stacks/clusters.stack";
 import { AuroraStack } from "../lib/stacks/aurora.stack";
 import { ServicesStack } from "../lib/stacks/services.stack";
 import { stackName } from "../lib/config/naming";
+import { MigrationStack } from "../lib/stacks/migration.stack";
 
 const app = new App();
 
@@ -39,7 +40,7 @@ const clusterStack = new ClustersStack(
   },
 );
 
-new AuroraStack(app, stackName("cloud-mesh", "dev", "db"), {
+const auroraStack = new AuroraStack(app, stackName("cloud-mesh", "dev", "db"), {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
@@ -49,6 +50,17 @@ new AuroraStack(app, stackName("cloud-mesh", "dev", "db"), {
   guiSg: [networkStack.httpSg.securityGroup],
   lambdaSg: [networkStack.lambdaSg.securityGroup],
   cluster: clusterStack.ecsCluster.ecs,
+  clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
+});
+
+new MigrationStack(app, stackName("cloud-mesh", "dev", "migrations"), {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+  dbCluster: auroraStack.dbCluster.auroraMySqlCluster,
+  usersDbSecret: auroraStack.userPwdSecret.secret,
+  tasksDbSecret: auroraStack.tasksPwdSecret.secret!,
   clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
 });
 

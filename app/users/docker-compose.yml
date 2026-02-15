@@ -9,8 +9,11 @@ services:
     ports:
       - "8001:80"
     environment:
-      - DATABASE_URL=mysql+asyncmy://users_user:users_password@db:3306/users_db
-      - DATABASE_URL_READ=mysql+asyncmy://users_user:users_password@db:3306/users_db
+      - DATABASE_HOST=db
+      - DATABASE_PORT=3306
+      - DATABASE_USER=users_user
+      - DATABASE_PASSWORD=users_password
+      - DATABASE_NAME=users_db
       - ENVIRONMENT=development
     depends_on:
       db:
