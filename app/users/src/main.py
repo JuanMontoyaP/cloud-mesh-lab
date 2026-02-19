@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
     await read_engine.dispose()
 
 
-app = FastAPI(title="User Service", lifespan=lifespan)
+app = FastAPI(title="User Service", root_path="/api/v1/users", lifespan=lifespan)
 
 
 app.include_router(health)
