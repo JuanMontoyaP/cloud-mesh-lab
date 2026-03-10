@@ -10,6 +10,7 @@ import { BASE_TAGS } from "../config/tags";
 export class NetworkStack extends Stack {
   public readonly vpc: VpcStandard;
   public readonly httpSg: SecurityGroupStandard;
+  public readonly servicesSg: SecurityGroupStandard;
   public readonly dbSg: SecurityGroupStandard;
   public readonly lambdaSg: SecurityGroupStandard;
 
@@ -34,6 +35,19 @@ export class NetworkStack extends Stack {
       ],
     });
 
+    this.servicesSg = new SecurityGroupStandard(this, "ServicesSg", {
+      vpc: this.vpc.vpc,
+      securityGroupName: "services-sg",
+      description: "Security group for allowing traffic from ALB",
+      ingressRules: [
+        {
+          peer: this.httpSg.securityGroup,
+          port: Port.tcp(80),
+          description: "Allow traffic from ALB",
+        },
+      ],
+    });
+
     this.lambdaSg = new SecurityGroupStandard(this, "LambdaSg", {
       vpc: this.vpc.vpc,
       securityGroupName: "lambda-sg",
@@ -46,7 +60,7 @@ export class NetworkStack extends Stack {
       description: "Security group for allowing traffic from private subnets",
       ingressRules: [
         {
-          peer: this.httpSg.securityGroup,
+          peer: this.servicesSg.securityGroup,
           port: Port.tcp(3306),
           description: "Allow backend to access DB",
         },
