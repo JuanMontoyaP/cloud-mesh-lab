@@ -48,7 +48,10 @@ const auroraStack = new AuroraStack(app, stackName("cloud-mesh", "dev", "db"), {
   },
   vpc: networkStack.vpc.vpc,
   dbSg: [networkStack.dbSg.securityGroup],
-  guiSg: [networkStack.httpSg.securityGroup],
+  guiSg: [
+    networkStack.httpSg.securityGroup,
+    networkStack.servicesSg.securityGroup,
+  ],
   lambdaSg: [networkStack.lambdaSg.securityGroup],
   cluster: clusterStack.ecsCluster.ecs,
   clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
@@ -85,9 +88,9 @@ new ServicesStack(app, stackName("cloud-mesh", "dev", "services"), {
   tasksDbSecret: auroraStack.tasksPwdSecret.secret,
   clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
   usersEcr: ecrStack.ecrUsers.ecr,
-  usersSg: [networkStack.httpSg.securityGroup],
+  usersSg: [networkStack.servicesSg.securityGroup],
   tasksEcr: ecrStack.ecrTasks.ecr,
-  tasksSg: [networkStack.httpSg.securityGroup],
+  tasksSg: [networkStack.servicesSg.securityGroup],
   usersTg: albStack.usersTg.tg,
   tasksTg: albStack.tasksTg.tg,
 });

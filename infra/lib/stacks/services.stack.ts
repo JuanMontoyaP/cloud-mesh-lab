@@ -150,8 +150,8 @@ export class ServicesStack extends Stack {
       cluster: props.cluster,
       taskDefinition: this.usersTaskDef.taskDefinition,
       securityGroups: props.usersSg,
-      subnetType: SubnetType.PUBLIC,
-      assignPublicIp: true,
+      subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+      assignPublicIp: false,
       desiredCount: 2,
     });
 
@@ -160,8 +160,8 @@ export class ServicesStack extends Stack {
       cluster: props.cluster,
       taskDefinition: this.tasksTaskDef.taskDefinition,
       securityGroups: props.tasksSg,
-      subnetType: SubnetType.PUBLIC,
-      assignPublicIp: true,
+      subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+      assignPublicIp: false,
       desiredCount: 2,
     });
 
