@@ -4,11 +4,12 @@ import {
   Cluster,
   Secret,
 } from "aws-cdk-lib/aws-ecs";
+import { ApplicationTargetGroup } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { Stack, StackProps, Duration, Tags } from "aws-cdk-lib";
 import { Repository } from "aws-cdk-lib/aws-ecr";
 import { LogGroup } from "aws-cdk-lib/aws-logs";
 import { DatabaseCluster } from "aws-cdk-lib/aws-rds";
-import { SecurityGroup, SubnetType } from "aws-cdk-lib/aws-ec2";
+import { SecurityGroup, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 import * as secretManager from "aws-cdk-lib/aws-secretsmanager";
 
@@ -27,13 +28,15 @@ export interface ServiceStackProps extends StackProps {
   tasksEcr: Repository;
   usersSg: SecurityGroup[];
   tasksSg: SecurityGroup[];
+  usersTg: ApplicationTargetGroup;
+  tasksTg: ApplicationTargetGroup;
 }
 
 export class ServicesStack extends Stack {
   public readonly usersTaskDef: TaskDefStandard;
   public readonly tasksTaskDef: TaskDefStandard;
   public readonly usersService: ServiceStandard;
-  public readonly taskService: ServiceStandard;
+  public readonly tasksService: ServiceStandard;
 
   constructor(scope: Construct, id: string, props: ServiceStackProps) {
     super(scope, id, props);
@@ -54,10 +57,10 @@ export class ServicesStack extends Stack {
                 "CMD-SHELL",
                 "wget --no-verbose --tries=1 --spider http://localhost:80/health/ || exit 1",
               ],
-              interval: Duration.seconds(30),
+              interval: Duration.seconds(15),
               timeout: Duration.seconds(5),
               retries: 3,
-              startPeriod: Duration.seconds(60),
+              startPeriod: Duration.seconds(30),
             },
             logging: LogDrivers.awsLogs({
               streamPrefix: "usersServiceMesh",
@@ -106,10 +109,10 @@ export class ServicesStack extends Stack {
                 "CMD-SHELL",
                 "wget --no-verbose --tries=1 --spider http://localhost:80/health/ || exit 1",
               ],
-              interval: Duration.seconds(30),
+              interval: Duration.seconds(15),
               timeout: Duration.seconds(5),
               retries: 3,
-              startPeriod: Duration.seconds(60),
+              startPeriod: Duration.seconds(30),
             },
             logging: LogDrivers.awsLogs({
               streamPrefix: "tasksServiceMesh",
@@ -152,7 +155,7 @@ export class ServicesStack extends Stack {
       desiredCount: 2,
     });
 
-    this.taskService = new ServiceStandard(this, "tasks-service", {
+    this.tasksService = new ServiceStandard(this, "tasks-service", {
       serviceName: "tasks-mesh",
       cluster: props.cluster,
       taskDefinition: this.tasksTaskDef.taskDefinition,
@@ -161,6 +164,9 @@ export class ServicesStack extends Stack {
       assignPublicIp: true,
       desiredCount: 2,
     });
+
+    this.usersService.service.attachToApplicationTargetGroup(props.usersTg);
+    this.tasksService.service.attachToApplicationTargetGroup(props.tasksTg);
 
     Object.entries(BASE_TAGS).forEach(([key, value]) =>
       Tags.of(this).add(key, value),

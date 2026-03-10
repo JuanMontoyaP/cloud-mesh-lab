@@ -5,8 +5,9 @@ import { NetworkStack } from "../lib/stacks/network.stack";
 import { ClustersStack } from "../lib/stacks/clusters.stack";
 import { AuroraStack } from "../lib/stacks/aurora.stack";
 import { ServicesStack } from "../lib/stacks/services.stack";
-import { stackName } from "../lib/config/naming";
 import { MigrationStack } from "../lib/stacks/migration.stack";
+import { AlbStack } from "../lib/stacks/api.stack";
+import { stackName } from "../lib/config/naming";
 
 const app = new App();
 
@@ -64,6 +65,15 @@ new MigrationStack(app, stackName("cloud-mesh", "dev", "migrations"), {
   clusterLogGroup: clusterStack.ecsClusterLogGroup.logGroup,
 });
 
+const albStack = new AlbStack(app, stackName("cloud-mesh", "dev", "alb"), {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+  vpc: networkStack.vpc.vpc,
+  albSg: networkStack.httpSg.securityGroup,
+});
+
 new ServicesStack(app, stackName("cloud-mesh", "dev", "services"), {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
@@ -78,4 +88,6 @@ new ServicesStack(app, stackName("cloud-mesh", "dev", "services"), {
   usersSg: [networkStack.httpSg.securityGroup],
   tasksEcr: ecrStack.ecrTasks.ecr,
   tasksSg: [networkStack.httpSg.securityGroup],
+  usersTg: albStack.usersTg.tg,
+  tasksTg: albStack.tasksTg.tg,
 });
